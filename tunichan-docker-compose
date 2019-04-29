@@ -1,0 +1,65 @@
+version: '3'
+services:
+  php-fpm70:
+    image: tunichan-fpm
+    volumes:
+#      - /home/tomo/nginx/php/php-fpm.conf:/etc/opt/rh/rh-php70/php-fpm.conf
+#      - /home/tomo/nginx/php/php.ini
+#      - /home/tomo/nginx/php/php-fpm.d/www.conf
+       - /home/tomo/nginx/html:/var/www/html
+    networks:
+      - tunichan-internal
+      
+  web:
+    image: nginx
+    command: /bin/bash -c "exec nginx -g 'daemon off;'"
+    volumes:
+      - /home/tomo/nginx/html:/var/www/html
+      - /home/tomo/nginx/tunichan.conf:/etc/nginx/conf.d/tunichan.conf
+    environment:
+      - NGINX_HOST=tunichan.hentai.agency
+      - NGINX_PORT=80
+    networks:
+      - webgateway
+      - tunichan-internal
+    labels:
+      - traefik.port=80
+      - traefik.docker.network=webgateway
+      - traefik.frontend.rule=Host:tunichan.hentai.agency
+      - traefik.frontend.priority=50
+  db:
+    image: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 8g4hF4g5484g5h
+    volumes:
+      - mysql:/var/lib/mysql
+    networks:
+      - tunichan-internal
+    
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+     - PMA_ARBITRARY=1
+     - PMA_HOST=db
+    restart: always
+    labels:
+     - traefik.port=80
+     - traefik.docker.network=webgateway
+     - traefik.frontend.rule=Host:phpmyadmin.hentai.agency
+     - traefik.frontend.priority=50 
+    volumes:
+     - /sessions 
+    networks:
+     - webgateway
+     - tunichan-internal
+     
+networks:
+  webgateway:
+    external: true
+  tunichan-internal:
+    internal: true
+volumes:
+  mysql:
+    external: true
+
