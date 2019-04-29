@@ -13,6 +13,8 @@ services:
   web:
     image: nginx
     command: /bin/bash -c "exec nginx -g 'daemon off;'"
+    ports:
+      - "81:80"
     configs:
       - source: nginx
         target: /etc/nginx/conf.d/tunichan.conf  
@@ -35,6 +37,7 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: 8g4hF4g5484g5h
+      MYSQL_DATABASE: tunichan
     volumes:
       - mysql:/var/lib/mysql
     networks:
