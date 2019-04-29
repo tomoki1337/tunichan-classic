@@ -1,0 +1,34 @@
+{% filter remove_whitespace %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+     <meta name="viewport" content="width=device-width,initial-scale=1.0">
+	<script type='text/javascript'>
+		var active_page = "rules";
+	</script>
+    <title>{{ settings.title }}</title>
+	{% include 'header.html' %}
+  </head>
+<body class="8chan vichan {% if mod %}is-moderator{% else %}is-not-moderator{% endif %} active-{% if not no_post_form %}index{% else %}ukko{% endif %}" data-stylesheet="{% if config.default_stylesheet.1 != '' %}{{ config.default_stylesheet.1 }}{% else %}default{% endif %}">
+    <div class="bar top">
+        {{ boardlist.top }}
+    </div>
+
+    <header>
+     <h1 class="glitch" data-text="{{ settings.title }}"> {{ settings.title }}</h1>
+      <div class="subtitle">{{ settings.subtitle }}</div>
+    </header>
+
+    <center>
+      <img alt="mascot" src="static/lain_is_cute_datass_small.png"/>
+    </center>
+
+    {% include 'rules.html' %}
+	<div class="pages"></div>
+	<script type="text/javascript">{% raw %}
+		ready();
+	{% endraw %}</script>
+  </body>
+</html>
+{% endfilter %}

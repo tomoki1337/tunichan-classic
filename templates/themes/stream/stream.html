@@ -1,0 +1,179 @@
+<!doctype html>
+<html>
+<head>
+	<link rel="stylesheet" media="screen" href="/stylesheets/style.css">
+	<link href="https://vjs.zencdn.net/5.16.0/video-js.css" rel="stylesheet">
+	<meta charset="utf-8">
+     <meta name="viewport" content="width=device-width,initial-scale=1.0">
+	<title>{{ settings.title }}</title>
+<script type="text/javascript">
+var active_page = "stream";
+</script>
+	{% include 'header.html' %}
+
+<style>
+.video-js { width:100%!important; height: auto!important; }
+</style>
+<script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+<script src="https://vjs.zencdn.net/5.16.0/video.js"></script>
+<script src="js/videojs-contrib-hls.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+        check_status();
+	 $('#format').trigger('change'); 
+        setInterval(check_status, 15000);
+});
+
+function check_status(){
+    $.get("{{ settings.rtmpviewers }}", function(data){
+    $("#rtmpviewers").text(data);
+  });
+
+  $.get("{{ settings.ogvstatus }}", function(data){    
+var el = $( '<div></div>' );   
+el.html(data.getElementsByTagName('html')[0].innerHTML);   
+
+var sd = el.find(".streamdata");  
+
+if (typeof sd !== 'undefined') {
+	if (typeof sd[25] !== 'undefined') {
+		$("#ogvnowplaying").text( sd[25].textContent);    
+	}
+
+	if (typeof sd[22] !== 'undefined') {
+		$("#ogvviewers").text( sd[22].textContent  );
+	}
+}
+});
+}
+
+function change_format(e) {
+      $(document).ready(function(){
+    let media  = document.getElementById("my-video");
+    let paused = media.paused;
+
+     format = e.value;
+     var datasetup;
+     if(videojs.getPlayers()["my-video"]) {
+    	delete videojs.getPlayers()["my-video"];
+     } 
+     if (format === "hls"){
+            datasetup = {"example_option": true,  "techOrder": ["html5","flash"],"fluid": true };
+     }
+     else if (format === "ogg"){
+             datasetup = {"example_option": true,  "techOrder": ["html5","flash"],"fluid": true };
+     }
+     else if (format === "rtmp"){
+             datasetup = {"example_option": true,  "techOrder": ["flash"],"fluid": true };
+     }
+	
+   var myvideo = videojs("my-video", datasetup , function(){
+          console.log("loaded");
+ 
+    });
+	   var myvideo;
+	   if (format === "hls"){
+	       myvideo = $("#my-video_html5_api");
+	       myvideo.src ="{{ settings.hlsurl }}";
+	       myvideo.src.type = "application/vnd.apple.mpegurl";
+	   }
+	   else if (format === "ogg"){
+	       myvideo = $("#my-video_html5_api");
+	       myvideo.src = "{{ settings.ogvurl }}";
+	       myvideo.src.type = "video/ogg";
+	   }
+	   else if (format === "rtmp"){
+	       myvideo = $("#my-video");
+	       myvideo.src = "{{ settings.rtmpvideojsurl }}";
+	       myvideo.src.type = "rtmp/mp4";
+	   }
+	   myvideo.load();
+	   if(!paused) {
+	      myvideo.play();
+	   }
+
+
+    check_status();
+    });
+} 
+
+</script>
+</head>
+<body>
+	<div class="bar top">
+		{{ boardlist.top }}
+	</div>
+	<header>
+		<h1 class="glitch" data-text="{{ settings.title }}"> {{ settings.title }}</h1>
+		<div class="subtitle">{{ settings.subtitle }}</div>
+	</header>
+	
+	<div>
+        <!-- data-setup='{ "example_option": true,  "techOrder": ["html5","flash"],"fluid": true} -->
+	<div id="box" width="100%">
+	<video id="my-video" class="video-js vjs-big-play-centered vjs-default-skin" height="264" width="640"  controls preload="auto" poster="https://lainchan.org/static/lain_is_cute_datass_small.png" >
+          {% set formatlist = settings.formats|split(' ') %}
+	  {% for format in formatlist %}
+	  {% if format == "hls" %}
+        <source id="hlssource" src="{{ settings.hlsurl }}" type="application/vnd.apple.mpegurl"> 
+	  {% elseif format == "ogg" %}
+        <source id="oggsource" src="{{ settings.ogvurl }}" type="video/ogg"> 
+	 {% elseif format == "rtmp" %}
+        <source id="rtmpsource" src="{{ settings.rtmpvideojsurl }}" type="rtmp/mp4"> 
+	  {% endif %} 
+	  {% endfor %} 
+    <p class="vjs-no-js">
+      To view this video please enable JavaScript, and consider upgrading to a web browser that
+      <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+    </p>
+  	</video>
+	</div>
+	<br/>
+	<p class="inlineheading" style="text-align:center;" >FORMAT:
+        <select style="float:none;" id="format" onchange="change_format(this)">
+          {% set formatlist = settings.formats|split(' ') %}
+	  {% for format in formatlist %}
+	  {% if format == settings.defaultformat %}
+          <option value="{{ format }}" selected>{{ format }}</option>
+	  {% else %} 
+          <option value="{{ format }}">{{ format }}</option>
+	  {% endif %} 
+          {% endfor %}
+	</select> </p>
+	<br/>
+	<p>Now Streaming RTMP <span id="rtmpnowplaying">unknown</span></p>
+	<p>Now Streaming OGV <span id="ogvnowplaying">unknown</span></p>
+	<p>Current RTMP viewers: <span id="rtmpviewers">unknown</span></p>
+	<p>Current OGV viewers: <span id="ogvviewers">unknown</span></p>
+	<div>
+	<p>Raw stream URLs for Mplayer, mpv, VLC, browser etc:</p>
+    <p> HLS: {{ settings.hlsurl }} </p>
+    <p> RTMP : {{ settings.rtmpurl }} </p>
+    <p> OGV :  {{ settings.ogvurl }} </p>
+	
+	<p>I want to stream. How do I stream ?</p>
+	<p> Get the stream key. (Ask on IRC #lainstream on lainchan IRC). Be prepared to answer questions on, what stream you want RTMP, OGV, what you are streaming, why you are streaming it and when you are streaming it ?</p>
+	<p>For RTMP  </p>
+	<p>Use obs or ffmpeg to stream  </p>
+	<p>E.g. ffmpeg -re -i filename -c copy -f flv {{ settings.rtmpurl }}?key=KEYGOESHERE</p>
+	<p> obs url field: rtmp://lainchan.org/show/ </p>
+	<p> obs key field: stream?user=<USER>&pass=<PASSWORD></p>
+	<p> For OGV Icecast cat filename | oggfwd -p lainchan.org 8000 <PASSWORD> /lainstream.ogg </p>
+	</div><br/>
+	</div>
+	
+	</div>
+	
+	<hr/>
+        <footer>
+                <p class="unimportant" style="margin-top:20px;text-align:center;">- <a href="http://tinyboard.org/">Tinyboard</a> + 
+                        <a href='https://int.vichan.net/devel/'>vichan</a> {{ config.version }} -
+                <br><a href="http://tinyboard.org/">Tinyboard</a> Copyright &copy; 2010-2014 Tinyboard Development Group    
+                <br><a href="https://engine.vichan.net/">vichan</a> Copyright &copy; 2012-2015 vichan-devel</p>
+        </footer>
+	<div class="pages"></div>
+	<script type="text/javascript">{% raw %}
+		ready();
+	{% endraw %}</script>
+</body>
+</html>
