@@ -36,7 +36,7 @@ services:
     image: mariadb
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: 8g4hF4g5484g5h
+      MYSQL_ROOT_PASSWORD: tunichan
       MYSQL_DATABASE: tunichan
     volumes:
       - mysql:/var/lib/mysql
